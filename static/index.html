@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Fin App (Tailwind)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.plot.ly/plotly-2.30.0.min.js"></script>
+  </head>
+  <body class="bg-slate-50 text-slate-900">
+    <div class="max-w-7xl mx-auto p-6">
+      <h1 class="text-3xl font-bold mb-6">Financial Analytics</h1>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <section class="bg-white rounded-lg shadow p-4">
+          <h2 class="text-xl font-semibold mb-3">Returns & Outliers</h2>
+          <div class="flex flex-col md:flex-row gap-2 mb-3">
+            <input id="r_source" class="border px-3 py-2 rounded w-full" value="yahoo" />
+            <input id="r_ticker" class="border px-3 py-2 rounded w-full" placeholder="Ticker" value="AAPL" />
+            <input id="r_start" type="date" class="border px-3 py-2 rounded w-full" value="2024-01-01" />
+            <input id="r_end" type="date" class="border px-3 py-2 rounded w-full" value="2024-06-30" />
+            <input id="r_window" type="number" class="border px-3 py-2 rounded w-full" value="21" />
+            <button id="r_run" class="bg-blue-600 text-white px-4 py-2 rounded">Run</button>
+          </div>
+          <div id="r_chart" class="h-72"></div>
+        </section>
+
+        <section class="bg-white rounded-lg shadow p-4">
+          <h2 class="text-xl font-semibold mb-3">CAPM</h2>
+          <div class="flex flex-col md:flex-row gap-2 mb-3">
+            <input id="c_asset" class="border px-3 py-2 rounded w-full" value="AMZN" />
+            <input id="c_market" class="border px-3 py-2 rounded w-full" value="^GSPC" />
+            <input id="c_start" type="date" class="border px-3 py-2 rounded w-full" value="2019-01-01" />
+            <input id="c_end" type="date" class="border px-3 py-2 rounded w-full" value="2025-01-01" />
+            <button id="c_run" class="bg-blue-600 text-white px-4 py-2 rounded">Run</button>
+          </div>
+          <pre id="c_summary" class="bg-slate-100 p-2 rounded h-48 overflow-auto text-xs"></pre>
+        </section>
+
+        <section class="bg-white rounded-lg shadow p-4 md:col-span-2">
+          <h2 class="text-xl font-semibold mb-3">Fama-French 3-Factor</h2>
+          <div class="flex flex-col md:flex-row gap-2 mb-3">
+            <input id="f_asset" class="border px-3 py-2 rounded w-full" value="META" />
+            <input id="f_start" type="date" class="border px-3 py-2 rounded w-full" value="2019-01-01" />
+            <input id="f_end" type="date" class="border px-3 py-2 rounded w-full" value="2025-01-01" />
+            <button id="f_run" class="bg-blue-600 text-white px-4 py-2 rounded">Run</button>
+          </div>
+          <pre id="f_summary" class="bg-slate-100 p-2 rounded h-48 overflow-auto text-xs"></pre>
+        </section>
+      </div>
+    </div>
+
+    <script>
+      const API = window.location.origin.replace(/:\d+$/, ":8000");
+
+      document.getElementById('r_run').onclick = async () => {
+        const src = document.getElementById('r_source').value;
+        const tk = document.getElementById('r_ticker').value;
+        const st = document.getElementById('r_start').value;
+        const en = document.getElementById('r_end').value;
+        const win = document.getElementById('r_window').value;
+        const url = `${API}/returns?source=${encodeURIComponent(src)}&ticker=${encodeURIComponent(tk)}&start=${st}&end=${en}&window=${win}`;
+        const res = await fetch(url);
+        const data = await res.json();
+        const dates = data.map(d => d.date);
+        const prices = data.map(d => d.adj_close);
+        const outliers = data.filter(d => d.is_outlier === 1);
+        const out_x = outliers.map(d => d.date);
+        const out_y = outliers.map(d => d.simple_rtn);
+        Plotly.newPlot('r_chart', [
+          { x: dates, y: prices, type: 'scatter', mode: 'lines', name: 'Adj Close' },
+          { x: out_x, y: out_y, mode: 'markers', name: 'Outliers', yaxis: 'y2' }
+        ], {
+          grid: { rows: 1, columns: 1, pattern: 'independent' },
+          yaxis: { title: 'Price' },
+          yaxis2: { title: 'Return', overlaying: 'y', side: 'right' }
+        });
+      };
+
+      document.getElementById('c_run').onclick = async () => {
+        const a = document.getElementById('c_asset').value;
+        const m = document.getElementById('c_market').value;
+        const st = document.getElementById('c_start').value;
+        const en = document.getElementById('c_end').value;
+        const url = `${API}/capm?asset=${encodeURIComponent(a)}&market=${encodeURIComponent(m)}&start=${st}&end=${en}&rf_zero=true`;
+        const res = await fetch(url);
+        const data = await res.json();
+        document.getElementById('c_summary').textContent = data.summary || JSON.stringify(data, null, 2);
+      };
+
+      document.getElementById('f_run').onclick = async () => {
+        const a = document.getElementById('f_asset').value;
+        const st = document.getElementById('f_start').value;
+        const en = document.getElementById('f_end').value;
+        const url = `${API}/ff3?asset=${encodeURIComponent(a)}&start=${st}&end=${en}`;
+        const res = await fetch(url);
+        const data = await res.json();
+        document.getElementById('f_summary').textContent = data.summary || JSON.stringify(data, null, 2);
+      };
+    </script>
+  </body>
+  </html>
+
+
