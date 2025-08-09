@@ -1,0 +1,32 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.sqlite3
+
+# Environments
+.venv/
+.env/
+venv/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# macOS
+.DS_Store
+
+# Data/outputs
+charts/
+plots/
+data/
+backtests/
+
+# Logs
+*.log
+
+# Node/JS (if any)
+node_modules/
+
+# Streamlit
+.streamlit/

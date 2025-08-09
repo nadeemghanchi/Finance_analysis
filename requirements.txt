@@ -1,0 +1,17 @@
+yfinance>=0.2.40
+pandas>=2.2.2
+numpy>=2.0.0
+quandl>=3.7.0
+intrinio-sdk>=6.30.3 
+matplotlib>=3.9.2
+cufflinks>=0.17.3
+plotly>=5.24.1,<6
+backtrader>=1.9.78.123
+ipywidgets>=8.1.5
+streamlit>=1.37.0
+statsmodels>=0.14.2
+prophet>=1.1.6
+pmdarima>=2.0.4
+cpi>=1.1.5
+scikit-learn>=1.6.1
+pandas-datareader>=0.10.0
